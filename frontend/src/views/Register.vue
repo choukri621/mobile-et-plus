@@ -40,7 +40,7 @@ const message = ref("");
 const registerUser = async () => {
   try {
     const response = await axios.post(
-      "http://localhost:3000/api/auth/register",
+      "https://mobile-et-plus.onrender.com/api/auth/register",
       {
         nom: nom.value,
         email: email.value,

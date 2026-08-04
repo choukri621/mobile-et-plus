@@ -115,7 +115,7 @@ const envoyerSupport = async () => {
       "-" +
       Math.floor(1000 + Math.random() * 9000);
 
-    await axios.post("http://localhost:3000/api/support", {
+    await axios.post("https://mobile-et-plus.onrender.com/api/support", {
       nom: client.value.nom,
       email: client.value.email,
       telephone: client.value.telephone,

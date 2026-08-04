@@ -36,7 +36,7 @@ const message = ref("");
 const login = async () => {
   try {
     const res = await axios.post(
-      "http://localhost:3000/api/auth/login",
+      "https://mobile-et-plus.onrender.com/api/auth/login",
       {
         email: email.value,
         password: password.value

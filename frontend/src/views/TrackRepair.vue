@@ -70,7 +70,7 @@ const chercherReparation = async () => {
 
   try {
     const res = await axios.get(
-      `http://localhost:3000/api/reparations/track/${trackingCode.value}`
+      `https://mobile-et-plus.onrender.com/api/reparations/track/${trackingCode.value}`
     );
 
     reparation.value = res.data;

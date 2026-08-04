@@ -39,7 +39,7 @@ const importerBoxy = async () => {
     const data = JSON.parse(jsonText.value);
 
     const res = await axios.post(
-      "http://localhost:3000/api/import-boxy",
+      "https://mobile-et-plus.onrender.com/api/import-boxy",
       data
     );
 

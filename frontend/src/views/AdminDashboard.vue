@@ -438,7 +438,7 @@ const changerServeurRenouvellement = () => {
 const confirmerRenouvellement = async () => {
   try {
     await axios.put(
-      `http://localhost:3000/api/clients/${formRenouvellement.value.id}`,
+      `https://mobile-et-plus.onrender.com/api/clients/${formRenouvellement.value.id}`,
       {
         serveur_iptv: formRenouvellement.value.serveur_iptv,
         date_debut: formRenouvellement.value.date_debut,
@@ -463,7 +463,7 @@ const logoutAdmin = () => {
 
 const chargerClients = async () => {
   try {
-    const res = await axios.get("http://localhost:3000/api/clients");
+    const res = await axios.get("https://mobile-et-plus.onrender.com");
     clients.value = res.data;
   } catch (err) {
     console.error(err);
@@ -483,7 +483,7 @@ const statutClient = (client) => {
 };
 const chargerRendezVous = async () => {
   try {
-    const res = await axios.get("http://localhost:3000/api/rendez-vous");
+    const res = await axios.get("https://mobile-et-plus.onrender.com/api/rendez-vous");
     rendezVous.value = res.data;
   } catch (err) {
     console.error(err);
@@ -493,7 +493,7 @@ const chargerRendezVous = async () => {
 
 const chargerReparations = async () => {
   try {
-    const res = await axios.get("http://localhost:3000/api/reparations");
+    const res = await axios.get("https://mobile-et-plus.onrender.com/api/reparations");
     reparations.value = res.data;
   } catch (err) {
     console.error(err);
@@ -503,7 +503,7 @@ const chargerReparations = async () => {
 
 const chargerSupport = async () => {
   try {
-    const res = await axios.get("http://localhost:3000/api/support");
+    const res = await axios.get("https://mobile-et-plus.onrender.com/api/support");
     supports.value = res.data;
   } catch (err) {
     console.error(err);
@@ -531,7 +531,7 @@ const ajouterClient = async () => {
   }
 
   try {
-    await axios.post("http://localhost:3000/api/clients", {
+    await axios.post("https://mobile-et-plus.onrender.com/api/clients", {
       nom: nouveauClient.value.nom,
       telephone: nouveauClient.value.telephone,
       email: nouveauClient.value.email,
@@ -560,7 +560,7 @@ const ajouterClient = async () => {
 
 const supprimerClient = async (id) => {
   try {
-    await axios.delete(`http://localhost:3000/api/clients/${id}`);
+    await axios.delete(`https://mobile-et-plus.onrender.com/api/clients/${id}`);
     message.value = "Client supprimé.";
     chargerClients();
   } catch (err) {
@@ -572,7 +572,7 @@ const supprimerClient = async (id) => {
 
 const supprimerRdv = async (id) => {
   try {
-    await axios.delete(`http://localhost:3000/api/rendez-vous/${id}`);
+    await axios.delete(`https://mobile-et-plus.onrender.com/api/rendez-vous/${id}`);
     message.value = "Rendez-vous supprimé.";
     chargerRendezVous();
   } catch (err) {
@@ -584,7 +584,7 @@ const supprimerRdv = async (id) => {
 const activerClientDepuisRdv = async (rdv) => {
   try {
     const today = new Date().toISOString().split("T")[0];
-    await axios.post("http://localhost:3000/api/clients", {
+    await axios.post("https://mobile-et-plus.onrender.com/api/clients", {
       nom: rdv.nom,
       telephone: rdv.telephone,
       email: rdv.email,
@@ -592,7 +592,7 @@ const activerClientDepuisRdv = async (rdv) => {
       serveur_iptv: rdv.serveur_iptv || null
     });
 
-    await axios.delete(`http://localhost:3000/api/rendez-vous/${rdv.id}`);
+    await axios.delete(`https://mobile-et-plus.onrender.com/api/rendez-vous/${rdv.id}`);
     message.value = "Paiement reçu : client activé.";
     chargerClients();
     chargerRendezVous();
@@ -604,7 +604,7 @@ const activerClientDepuisRdv = async (rdv) => {
 
 const modifierStatutReparation = async (id, statut) => {
   try {
-    await axios.put(`http://localhost:3000/api/reparations/${id}`, { statut });
+    await axios.put(`https://mobile-et-plus.onrender.com/api/reparations/${id}`, { statut });
     message.value = "Statut réparation modifié.";
     chargerReparations();
   } catch (err) {
@@ -615,7 +615,7 @@ const modifierStatutReparation = async (id, statut) => {
 
 const accepterReparation = async (id) => {
   try {
-    const res = await axios.put(`http://localhost:3000/api/reparations/${id}/accept`);
+    const res = await axios.put(`https://mobile-et-plus.onrender.com/api/reparations/${id}/accept`);
     message.value = `Réparation acceptée. Code tracking : ${res.data.tracking_code}`;
     chargerReparations();
   } catch (err) {
@@ -626,7 +626,7 @@ const accepterReparation = async (id) => {
 
 const supprimerReparation = async (id) => {
   try {
-    await axios.delete(`http://localhost:3000/api/reparations/${id}`);
+    await axios.delete(`https://mobile-et-plus.onrender.com/api/reparations/${id}`);
     message.value = "Réparation supprimée.";
     chargerReparations();
   } catch (err) {
@@ -637,7 +637,7 @@ const supprimerReparation = async (id) => {
 
 const modifierSupport = async (ticket) => {
   try {
-    await axios.put(`http://localhost:3000/api/support/${ticket.id}`, {
+    await axios.put(`https://mobile-et-plus.onrender.com/api/support/${ticket.id}`, {
       statut: ticket.statut
     });
     message.value = "Statut support modifié.";
@@ -649,7 +649,7 @@ const modifierSupport = async (ticket) => {
 
 const supprimerSupport = async (id) => {
   try {
-    await axios.delete(`http://localhost:3000/api/support/${id}`);
+    await axios.delete(`https://mobile-et-plus.onrender.com/api/support/${id}`);
     message.value = "Ticket supprimé.";
     chargerSupport();
   } catch (err) {
@@ -748,7 +748,7 @@ const importerExcel = async (event) => {
 
   try {
     const res = await axios.post(
-      "http://localhost:3000/api/import-excel",
+      "https://mobile-et-plus.onrender.com/api/import-excel",
       formData,
       {
         headers: {
@@ -785,7 +785,7 @@ const fermerModifierClient = () => {
 
 const sauvegarderModificationClient = async () => {
   try {
-    await axios.put(`http://localhost:3000/api/clients/${formModifier.value.id}`, {
+    await axios.put(`https://mobile-et-plus.onrender.com/api/clients/${formModifier.value.id}`, {
       nom: formModifier.value.nom,
       telephone: formModifier.value.telephone,
       email: formModifier.value.email,
