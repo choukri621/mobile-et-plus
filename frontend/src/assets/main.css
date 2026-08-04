@@ -1,0 +1,91 @@
+@import './base.css';
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-weight: normal;
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 2rem;
+  }
+}
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .admin-page {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    flex-direction: row !important;
+    overflow-x: auto;
+    gap: 10px;
+  }
+
+  .sidebar a,
+  .sidebar button {
+    min-width: max-content;
+    font-size: 14px;
+  }
+
+  .content {
+    margin-left: 0 !important;
+    padding: 20px !important;
+  }
+
+  .stats,
+  .dashboard-grid,
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .top h1 {
+    font-size: 34px !important;
+  }
+
+  .panel {
+    padding: 18px !important;
+    overflow-x: auto;
+  }
+
+  .table-head,
+  .table-row {
+    min-width: 900px;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    width: 100%;
+  }
+}
