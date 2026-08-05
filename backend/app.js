@@ -24,13 +24,26 @@ const atlasImportRoutes = require("./routes/atlasImportRoutes");
 const boxyImportRoutes = require("./routes/boxyImportRoutes");
 const excelImportRoutes = require("./routes/excelImportRoutes");
 const serveurRoutes = require("./routes/serveurRoutes");
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://mobile-et-plus.vercel.app"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://mobile-et-plus.vercel.app"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  origin: function (origin, callback) {
+    // Autorise Postman, navigateur direct et les origines prévues
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log("Origine CORS refusée :", origin);
+    return callback(new Error("Origine non autorisée par CORS"));
+  },
+
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 204
 }));
 app.options("*", cors());
 
