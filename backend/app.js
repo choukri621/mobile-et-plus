@@ -120,8 +120,13 @@ await envoyerSMSExpiration(
 });
 
 /* NOTIFICATION ABONNEMENT */
+/* NOTIFICATION ABONNEMENT */
+
 console.log("Cron IPTV chargé");
-cron.schedule("* * * * *", () => {
+
+cron.schedule(
+  "* * * * *",
+  () => {
     console.log("Vérification abonnements IPTV");
 
     const sql = `
@@ -158,12 +163,21 @@ cron.schedule("* * * * *", () => {
             joursRestants
           );
 
+          if (client.telephone) {
+            await envoyerSMSExpiration(
+              client.telephone,
+              client.nom,
+              client.date_fin,
+              joursRestants
+            );
+          }
+
           console.log(
-            `Email envoyé à ${client.nom} — ${joursRestants} jour(s) restant(s)`
+            `Notification envoyée à ${client.nom} (${joursRestants} jour(s) restant(s))`
           );
         } catch (error) {
           console.error(
-            `Erreur notification pour ${client.nom} :`,
+            `Erreur notification ${client.nom} :`,
             error
           );
         }
@@ -175,65 +189,7 @@ cron.schedule("* * * * *", () => {
   }
 );
 
-        console.log('Clients trouvés :', results.length);
 
-        for (const client of results) {
-
-            try {
-
-                await envoyerEmail(
-                    client.email,
-                    client.nom
-                );
-
-                console.log(
-                    'Email envoyé à',
-                    client.nom
-                );
-
-                db.query(
-                    'UPDATE clients SET notification_envoyee = 1 WHERE id = ?',
-                    [client.id]
-                );
-
-            } catch (error) {
-
-                console.log(error);
-
-            }
-
-        }
-for (const client of results) {
-  try {
-    if (client.email) {
-      await envoyerEmail(
-        client.email,
-        client.nom
-      );
-    }
-
-    if (client.telephone) {
-      await envoyerSMSExpiration(
-        client.telephone,
-        client.nom,
-        client.date_fin
-      );
-    }
-
-    db.query(
-      "UPDATE clients SET notification_envoyee = 1 WHERE id = ?",
-      [client.id]
-    );
-
-    console.log("Notification envoyée à", client.nom);
-  } catch (error) {
-    console.log("Erreur notification :", error);
-  }
-}
-    });
-    
-
-});
 cron.schedule("* * * * *", () => {
   const sql = `
     SELECT *
