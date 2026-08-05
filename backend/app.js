@@ -120,11 +120,9 @@ await envoyerSMSExpiration(
 });
 
 /* NOTIFICATION ABONNEMENT */
-
-cron.schedule(
-  "0 9 * * *",
-  () => {
-    console.log("===== Vérification des abonnements IPTV =====");
+console.log("Cron IPTV chargé");
+cron.schedule("* * * * *", () => {
+    console.log("Vérification abonnements IPTV");
 
     const sql = `
       SELECT *
@@ -137,7 +135,7 @@ cron.schedule(
 
     db.query(sql, async (err, results) => {
       if (err) {
-        console.error("Erreur MySQL :", err);
+        console.error("Erreur recherche clients :", err);
         return;
       }
 
@@ -145,7 +143,6 @@ cron.schedule(
 
       for (const client of results) {
         try {
-
           const joursRestants = Math.max(
             0,
             Math.ceil(
@@ -154,7 +151,6 @@ cron.schedule(
             )
           );
 
-          // Email
           await envoyerEmail(
             client.email,
             client.nom,
@@ -162,23 +158,12 @@ cron.schedule(
             joursRestants
           );
 
-          // SMS
-          if (client.telephone) {
-            await envoyerSMSExpiration(
-              client.telephone,
-              client.nom,
-              client.date_fin,
-              joursRestants
-            );
-          }
-
           console.log(
-            `Notification envoyée à ${client.nom} (${joursRestants} jour(s) restant(s))`
+            `Email envoyé à ${client.nom} — ${joursRestants} jour(s) restant(s)`
           );
-
         } catch (error) {
           console.error(
-            `Erreur notification ${client.nom}`,
+            `Erreur notification pour ${client.nom} :`,
             error
           );
         }
@@ -189,6 +174,66 @@ cron.schedule(
     timezone: "America/Toronto"
   }
 );
+
+        console.log('Clients trouvés :', results.length);
+
+        for (const client of results) {
+
+            try {
+
+                await envoyerEmail(
+                    client.email,
+                    client.nom
+                );
+
+                console.log(
+                    'Email envoyé à',
+                    client.nom
+                );
+
+                db.query(
+                    'UPDATE clients SET notification_envoyee = 1 WHERE id = ?',
+                    [client.id]
+                );
+
+            } catch (error) {
+
+                console.log(error);
+
+            }
+
+        }
+for (const client of results) {
+  try {
+    if (client.email) {
+      await envoyerEmail(
+        client.email,
+        client.nom
+      );
+    }
+
+    if (client.telephone) {
+      await envoyerSMSExpiration(
+        client.telephone,
+        client.nom,
+        client.date_fin
+      );
+    }
+
+    db.query(
+      "UPDATE clients SET notification_envoyee = 1 WHERE id = ?",
+      [client.id]
+    );
+
+    console.log("Notification envoyée à", client.nom);
+  } catch (error) {
+    console.log("Erreur notification :", error);
+  }
+}
+    });
+    
+
+});
 cron.schedule("* * * * *", () => {
   const sql = `
     SELECT *
