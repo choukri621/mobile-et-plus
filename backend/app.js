@@ -95,28 +95,20 @@ app.get('/test-db', (req, res) => {
 
 /* TEST EMAIL */
 
-app.get('/test-email', async (req, res) => {
+app.get("/test-email", async (req, res) => {
+  try {
+    await envoyerEmail(
+      "choukri.bzd@gmail.com",
+      "Ahmed",
+      new Date(),
+      7
+    );
 
-    try {
-
-        await envoyerEmail(
-            'choukri.bzd@gmail.com',
-            'Ahmed'
-        );
-
-        res.send('Email envoyé avec succès');
-await envoyerSMSExpiration(
-  client.telephone,
-  client.nom,
-  client.date_fin
-);
-    } catch (err) {
-
-        console.log(err);
-        res.status(500).send('Erreur email');
-
-    }
-
+    res.send("Email envoyé avec succès");
+  } catch (err) {
+    console.error("Erreur test email :", err);
+    res.status(500).send("Erreur email");
+  }
 });
 
 /* NOTIFICATION ABONNEMENT */
