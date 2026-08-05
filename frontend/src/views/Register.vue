@@ -1,16 +1,21 @@
 <template>
   <div class="page">
-    <div class="form-card">
+    <form class="form-card" @submit.prevent="registerUser">
       <h1>Créer un compte</h1>
       <p>Inscription client Mobile et Plus</p>
 
-      <input v-model="nom" placeholder="Nom complet" />
-      <input v-model="email" placeholder="Email" type="email" />
-      <input v-model="telephone" placeholder="Téléphone" />
-      <input v-model="password" placeholder="Mot de passe" type="password" />
+      <input v-model.trim="nom" placeholder="Nom complet" required />
+      <input v-model.trim="email" placeholder="Email" type="email" required />
+      <input v-model.trim="telephone" placeholder="Téléphone" required />
+      <input
+        v-model="password"
+        placeholder="Mot de passe"
+        type="password"
+        required
+      />
 
-      <button @click="registerUser">
-        S'inscrire
+      <button type="submit" :disabled="chargement">
+        {{ chargement ? "Inscription..." : "S'inscrire" }}
       </button>
 
       <p v-if="message" class="message">
@@ -20,10 +25,9 @@
       <router-link to="/login">
         Déjà un compte ? Connexion
       </router-link>
-    </div>
+    </form>
   </div>
 </template>
-
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
@@ -36,8 +40,23 @@ const email = ref("");
 const telephone = ref("");
 const password = ref("");
 const message = ref("");
+const chargement = ref(false);
 
 const registerUser = async () => {
+  message.value = "";
+
+  if (
+    !nom.value ||
+    !email.value ||
+    !telephone.value ||
+    !password.value
+  ) {
+    message.value = "Veuillez remplir tous les champs.";
+    return;
+  }
+
+  chargement.value = true;
+
   try {
     const response = await axios.post(
       "https://mobile-et-plus.onrender.com/api/auth/register",
@@ -49,18 +68,25 @@ const registerUser = async () => {
       }
     );
 
-    message.value = response.data.message || "Compte créé avec succès";
+    message.value =
+      response.data.message || "Compte créé avec succès.";
 
     setTimeout(() => {
       router.push("/login");
     }, 1500);
-
   } catch (error) {
-    console.log(error);
+    console.error("Erreur inscription :", error);
 
-    message.value =
-      error.response?.data?.message ||
-      "Erreur lors de l'inscription";
+    if (!error.response) {
+      message.value =
+        "Impossible de joindre le serveur. Vérifie le backend ou CORS.";
+    } else {
+      message.value =
+        error.response.data?.message ||
+        `Erreur ${error.response.status} pendant l'inscription.`;
+    }
+  } finally {
+    chargement.value = false;
   }
 };
 </script>

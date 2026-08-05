@@ -25,10 +25,14 @@ const boxyImportRoutes = require("./routes/boxyImportRoutes");
 const excelImportRoutes = require("./routes/excelImportRoutes");
 const serveurRoutes = require("./routes/serveurRoutes");
 app.use(cors({
-  origin: "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: [
+    "http://localhost:5173",
+    "https://mobile-et-plus.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
+app.options("*", cors());
 
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
@@ -159,8 +163,35 @@ cron.schedule('0 9 * * *', () => {
             }
 
         }
+for (const client of results) {
+  try {
+    if (client.email) {
+      await envoyerEmail(
+        client.email,
+        client.nom
+      );
+    }
 
+    if (client.telephone) {
+      await envoyerSMSExpiration(
+        client.telephone,
+        client.nom,
+        client.date_fin
+      );
+    }
+
+    db.query(
+      "UPDATE clients SET notification_envoyee = 1 WHERE id = ?",
+      [client.id]
+    );
+
+    console.log("Notification envoyée à", client.nom);
+  } catch (error) {
+    console.log("Erreur notification :", error);
+  }
+}
     });
+    
 
 });
 cron.schedule("* * * * *", () => {
@@ -202,4 +233,31 @@ app.listen(PORT, () => {
 
     console.log(`Serveur lancé sur le port ${PORT}`);
 
+});
+app.get("/test-email", async (req, res) => {
+  try {
+    await envoyerEmail(
+      "choukri.bzd@gmail.com",
+      "Ahmed"
+    );
+
+    res.send("Email envoyé avec succès");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Erreur email");
+  }
+});
+app.get("/test-sms", async (req, res) => {
+  try {
+    await envoyerSMSExpiration(
+      "+14385318589",
+      "Ahmed",
+      "2026-08-11"
+    );
+
+    res.send("SMS envoyé avec succès");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Erreur SMS");
+  }
 });
