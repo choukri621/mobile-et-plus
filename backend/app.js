@@ -1,51 +1,42 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 
-const db = require('./config/db');
+const db = require("./config/db");
 
-const clientRoutes = require('./routes/clientRoutes');
-const rendezVousRoutes = require('./routes/rendezVousRoutes');
-const availabilityRoutes = require('./routes/availabilityRoutes');
-const repairRoutes = require('./routes/repairRoutes');
+const clientRoutes = require("./routes/clientRoutes");
+const rendezVousRoutes = require("./routes/rendezVousRoutes");
+const availabilityRoutes = require("./routes/availabilityRoutes");
+const repairRoutes = require("./routes/repairRoutes");
 const authRoutes = require("./routes/authRoutes");
-const cron = require('node-cron');
+const cron = require("node-cron");
+
 const {
   envoyerEmail,
   envoyerEmailRappelRendezVous,
   envoyerSMSExpiration
 } = require("./services/emailService");
+
 const notificationRoutes = require("./routes/notificationRoutes");
-const supportRoutes=require("./routes/supportRoutes");
+const supportRoutes = require("./routes/supportRoutes");
 const { recupererClientsAtlas } = require("./services/atlasService");
 const atlasImportRoutes = require("./routes/atlasImportRoutes");
 const boxyImportRoutes = require("./routes/boxyImportRoutes");
 const excelImportRoutes = require("./routes/excelImportRoutes");
 const serveurRoutes = require("./routes/serveurRoutes");
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://mobile-et-plus.vercel.app"
-];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Autorise Postman, navigateur direct et les origines prévues
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+app.use(cors());
 
-    console.log("Origine CORS refusée :", origin);
-    return callback(new Error("Origine non autorisée par CORS"));
-  },
+app.use(express.json({ limit: "20mb" }));
+app.use(
+  express.urlencoded({
+    limit: "20mb",
+    extended: true
+  })
+);
 
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-  optionsSuccessStatus: 204
-}));
-app.options("*", cors());
 
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
