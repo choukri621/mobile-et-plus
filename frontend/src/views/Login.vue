@@ -34,6 +34,7 @@ const password = ref("");
 const message = ref("");
 
 const login = async () => {
+  console.log("Connexion cliquée");
   try {
     const res = await axios.post(
       "https://mobile-et-plus.onrender.com/api/auth/login",
