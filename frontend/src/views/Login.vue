@@ -12,7 +12,18 @@
         <input v-model="email" placeholder="Email" type="email" />
         <input v-model="password" placeholder="Mot de passe" type="password" />
 
-        <button @click="loginUser">Connexion</button>
+        <form class="form" @submit.prevent="login">
+  <h2>Connexion</h2>
+
+  <input v-model="email" placeholder="Email" type="email" required />
+  <input v-model="password" placeholder="Mot de passe" type="password" required />
+
+  <button type="submit">Connexion</button>
+
+  <p v-if="message" class="message">{{ message }}</p>
+
+  <router-link to="/register">Créer un compte</router-link>
+</form>
 
         <p v-if="message" class="message">{{ message }}</p>
 
