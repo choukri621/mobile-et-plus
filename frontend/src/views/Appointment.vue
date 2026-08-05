@@ -142,7 +142,7 @@ const reserver = async () => {
   }
 
   try {
-    await axios.post("http://localhost:3000/api/rendez-vous", form);
+    await axios.post("https://mobile-et-plus.onrender.com/api/rendez-vous", form);
 
     message.value = "Rendez-vous réservé avec succès.";
 
