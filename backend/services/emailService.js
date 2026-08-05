@@ -24,7 +24,12 @@ const transporter = nodemailer.createTransport({
 
 /* EMAIL IPTV */
 
-const envoyerEmail = async (email, nom) => {
+const envoyerEmail = async (
+  email,
+  nom,
+  dateFin,
+  joursRestants
+) => {
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -33,9 +38,19 @@ const envoyerEmail = async (email, nom) => {
       html: `
         <h2>Bonjour ${nom}</h2>
 
-        <p>
-          Votre abonnement IPTV expire dans 7 jours.
-        </p>
+       <p>
+Votre abonnement IPTV expire dans
+<b>${joursRestants} jour(s)</b>.
+</p>
+
+<p>
+Date de fin :
+<b>${dateFin}</b>
+</p>
+
+<p>
+Merci de passer au magasin Mobile et Plus afin de renouveler votre abonnement.
+</p>
 
         <p>
           Prix du renouvellement :
@@ -198,12 +213,24 @@ const envoyerEmailRappelRendezVous = async (email, nom, type, date, heure) => {
     console.log("Erreur email rappel :", error);
   }
 };
-const envoyerSMSExpiration = async (telephone, nom, dateFin) => {
+const envoyerSMSExpiration = async (
+  telephone,
+  nom,
+  dateFin,
+  joursRestants
+) => {
   try {
     if (!telephone) return;
 
+    const texteExpiration =
+      joursRestants === 0
+        ? "expire aujourd’hui"
+        : `expire dans ${joursRestants} jour(s)`;
+
     await twilioClient.messages.create({
-      body: `Bonjour ${nom}, votre abonnement IPTV expire dans 7 jours (${dateFin}). Merci de renouveler. Mobile et Plus`,
+      body:
+        `Bonjour ${nom}, votre abonnement IPTV ${texteExpiration} ` +
+        `(${dateFin}). Merci de renouveler. Mobile et Plus`,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: telephone
     });
