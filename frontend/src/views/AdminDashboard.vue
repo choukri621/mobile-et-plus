@@ -460,14 +460,19 @@ const logoutAdmin = () => {
   localStorage.removeItem("admin");
   router.push("/admin-login");
 };
-
 const chargerClients = async () => {
   try {
-    const res = await axios.get("https://mobile-et-plus.onrender.com");
-    clients.value = res.data;
+    const res = await axios.get(
+      "https://mobile-et-plus.onrender.com/api/clients"
+    );
+
+    clients.value = Array.isArray(res.data)
+      ? res.data
+      : res.data.clients || [];
+
   } catch (err) {
     console.error(err);
-    message.value = "Erreur chargement clients.";
+    clients.value = [];
   }
 };
 const statutClient = (client) => {
