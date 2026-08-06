@@ -122,13 +122,10 @@ cron.schedule(
     console.log("Vérification abonnements IPTV");
 
     const sql = `
-      SELECT *
-      FROM clients
-      WHERE DATEDIFF(date_fin, CURDATE()) BETWEEN 0 AND 7
-      AND statut = 'actif'
-      AND email IS NOT NULL
-      AND email <> ''
-    `;
+SELECT *
+FROM clients
+LIMIT 5
+`;
 
     db.query(sql, async (err, results) => {
       if (err) {
