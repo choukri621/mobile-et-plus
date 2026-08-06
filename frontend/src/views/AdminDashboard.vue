@@ -882,12 +882,63 @@ const formatDate = (date) => {
   if (!date) return "";
   return new Date(date).toLocaleDateString("fr-CA");
 };
+const clientsExpiration = ref([]);
+const rechercheExpiration = ref("");
+const periodeExpiration = ref(30);
+const chargementExpiration = ref(false);
 
+const chargerClientsExpiration = async () => {
+  chargementExpiration.value = true;
+
+  try {
+    const res = await axios.get(
+      "https://mobile-et-plus.onrender.com/api/clients/expiration-proche/liste",
+      {
+        params: {
+          jours: periodeExpiration.value,
+          recherche: rechercheExpiration.value
+        }
+      }
+    );
+
+    clientsExpiration.value = Array.isArray(res.data)
+      ? res.data
+      : [];
+  } catch (error) {
+    console.error(
+      "Erreur chargement clients expiration :",
+      error
+    );
+
+    clientsExpiration.value = [];
+  } finally {
+    chargementExpiration.value = false;
+  }
+};
+
+const classeExpiration = (jours) => {
+  const nombreJours = Number(jours);
+
+  if (nombreJours <= 1) {
+    return "urgent";
+  }
+
+  if (nombreJours <= 3) {
+    return "danger";
+  }
+
+  if (nombreJours <= 7) {
+    return "warning";
+  }
+
+  return "normal";
+};
 onMounted(() => {
   chargerClients();
   chargerRendezVous();
   chargerReparations();
   chargerSupport();
+  chargerClientsExpiration();
 });
 
 
