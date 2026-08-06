@@ -652,30 +652,38 @@ const statutClient = (client) => {
 };
 const chargerRendezVous = async () => {
   try {
-    const res = await axios.get("https://mobile-et-plus.onrender.com/api/rendez-vous");
-    rendezVous.value = res.data;
+    const res = await axios.get(
+      "https://mobile-et-plus.onrender.com/api/rendez-vous"
+    );
+
+    rendezVous.value = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data?.rendezVous)
+        ? res.data.rendezVous
+        : [];
   } catch (err) {
     console.error(err);
+    rendezVous.value = [];
     message.value = "Erreur chargement rendez-vous.";
   }
 };
 
-const chargerReparations = async () => {
-  try {
-    const res = await axios.get("https://mobile-et-plus.onrender.com/api/reparations");
-    reparations.value = res.data;
-  } catch (err) {
-    console.error(err);
-    message.value = "Erreur chargement réparations.";
-  }
-};
+
 
 const chargerSupport = async () => {
   try {
-    const res = await axios.get("https://mobile-et-plus.onrender.com/api/support");
-    supports.value = res.data;
+    const res = await axios.get(
+      "https://mobile-et-plus.onrender.com/api/support"
+    );
+
+    supports.value = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data?.supports)
+        ? res.data.supports
+        : [];
   } catch (err) {
     console.error(err);
+    supports.value = [];
   }
 };
 const nouveauClient = ref({
@@ -828,7 +836,11 @@ const supprimerSupport = async (id) => {
 };
 
 const clientsActifs = computed(() => {
-  return clients.value.filter(client => (client.statut || "actif") === "actif").length;
+  const liste = Array.isArray(clients.value) ? clients.value : [];
+
+  return liste.filter(
+    (client) => (client.statut || "actif") === "actif"
+  ).length;
 });
 
 const prixServeur = (serveur) => {
@@ -839,45 +851,77 @@ const prixServeur = (serveur) => {
   if (serveur.includes("Smart")) return 200;
   return 0;
 };
-
 const revenusIPTV = computed(() => {
-  return clients.value.reduce((total, client) => total + prixServeur(client.serveur_iptv), 0);
+  const liste = Array.isArray(clients.value) ? clients.value : [];
+
+  return liste.reduce(
+    (total, client) =>
+      total + prixServeur(client.serveur_iptv),
+    0
+  );
 });
 
 const reparationsEnCours = computed(() => {
-  return reparations.value.filter(rep =>
-    rep.statut === "diagnostic" ||
-    rep.statut === "en réparation" ||
-    rep.statut === "prêt à récupérer" ||
-    rep.statut === "reçu au magasin"
+  const liste = Array.isArray(reparations.value)
+    ? reparations.value
+    : [];
+
+  return liste.filter((rep) =>
+    [
+      "diagnostic",
+      "en réparation",
+      "prêt à récupérer",
+      "reçu au magasin"
+    ].includes(rep.statut)
   ).length;
 });
 
 const reparationsTerminees = computed(() => {
-  return reparations.value.filter(rep => rep.statut === "livré").length;
+  const liste = Array.isArray(reparations.value)
+    ? reparations.value
+    : [];
+
+  return liste.filter(
+    (rep) => rep.statut === "livré"
+  ).length;
 });
 
 const rendezVousAujourdhui = computed(() => {
+  const liste = Array.isArray(rendezVous.value)
+    ? rendezVous.value
+    : [];
+
   const today = new Date().toISOString().split("T")[0];
-  return rendezVous.value.filter(rdv => {
+
+  return liste.filter((rdv) => {
     if (!rdv.date_rdv) return false;
-    return new Date(rdv.date_rdv).toISOString().split("T")[0] === today;
+
+    return (
+      new Date(rdv.date_rdv)
+        .toISOString()
+        .split("T")[0] === today
+    );
   }).length;
 });
 
-
 const reparationsFiltrees = computed(() => {
-  const search = rechercheReparation.value.toLowerCase();
-  if (!search) return reparations.value;
+  const liste = Array.isArray(reparations.value)
+    ? reparations.value
+    : [];
 
-  return reparations.value.filter(rep =>
-    rep.nom?.toLowerCase().includes(search) ||
-    rep.telephone?.toLowerCase().includes(search) ||
-    rep.tracking_code?.toLowerCase().includes(search) ||
-    rep.appareil?.toLowerCase().includes(search)
+  const search = rechercheReparation.value
+    .trim()
+    .toLowerCase();
+
+  if (!search) return liste;
+
+  return liste.filter((rep) =>
+    String(rep.nom || "").toLowerCase().includes(search) ||
+    String(rep.telephone || "").toLowerCase().includes(search) ||
+    String(rep.tracking_code || "").toLowerCase().includes(search) ||
+    String(rep.appareil || "").toLowerCase().includes(search)
   );
 });
-
 const formatDate = (date) => {
   if (!date) return "";
   return new Date(date).toLocaleDateString("fr-CA");
