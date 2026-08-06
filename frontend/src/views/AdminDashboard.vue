@@ -477,59 +477,8 @@
 
 <script setup>
 // GET clients classés par expiration la plus proche
-router.get("/expiration-proche/liste", (req, res) => {
-  const jours = Number(req.query.jours) || 30;
-  const recherche = String(req.query.recherche || "").trim();
 
-  const sql = `
-    SELECT
-      id,
-      nom,
-      telephone,
-      email,
-      serveur_iptv,
-      date_debut,
-      date_fin,
-      statut,
-      DATEDIFF(date_fin, CURDATE()) AS jours_restants,
-      CASE
-        WHEN
-          (email IS NULL OR TRIM(email) = '')
-          AND
-          (telephone IS NULL OR TRIM(telephone) = '')
-        THEN 0
-        ELSE 1
-      END AS contact_disponible
-    FROM clients
-    WHERE date_fin IS NOT NULL
-    AND DATEDIFF(date_fin, CURDATE()) BETWEEN 0 AND ?
-    AND (
-      nom LIKE ?
-      OR email LIKE ?
-      OR telephone LIKE ?
-      OR serveur_iptv LIKE ?
-    )
-    ORDER BY date_fin ASC, nom ASC
-  `;
-
-  const terme = `%${recherche}%`;
-
-  db.query(
-    sql,
-    [jours, terme, terme, terme, terme],
-    (err, results) => {
-      if (err) {
-        console.error("Erreur expirations proches :", err);
-
-        return res.status(500).json({
-          message: "Erreur lors du chargement des expirations"
-        });
-      }
-
-      res.json(results);
-    }
-  );
-});
+  
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
@@ -550,17 +499,57 @@ const message = ref("");
 const rechercheClient = ref("");
 const rechercheReparation = ref("");
 const clientAModifier = ref(null);
+
 const pageActuelle = ref(1);
 const clientsParPage = 25;
 
+const clientsFiltres = computed(() => {
+  const liste = Array.isArray(clients.value)
+    ? clients.value
+    : [];
+
+  const recherche = rechercheClient.value
+    .trim()
+    .toLowerCase();
+
+  if (!recherche) {
+    return liste;
+  }
+
+  return liste.filter((client) => {
+    return (
+      String(client.nom || "")
+        .toLowerCase()
+        .includes(recherche) ||
+      String(client.email || "")
+        .toLowerCase()
+        .includes(recherche) ||
+      String(client.telephone || "")
+        .toLowerCase()
+        .includes(recherche) ||
+      String(client.serveur_iptv || "")
+        .toLowerCase()
+        .includes(recherche)
+    );
+  });
+});
+
 const clientsPagine = computed(() => {
-  const debut = (pageActuelle.value - 1) * clientsParPage;
+  const debut =
+    (pageActuelle.value - 1) * clientsParPage;
+
   const fin = debut + clientsParPage;
+
   return clientsFiltres.value.slice(debut, fin);
 });
 
 const totalPagesClients = computed(() => {
-  return Math.ceil(clientsFiltres.value.length / clientsParPage);
+  return Math.max(
+    1,
+    Math.ceil(
+      clientsFiltres.value.length / clientsParPage
+    )
+  );
 });
 const formModifier = ref({
   id: "",
@@ -876,23 +865,7 @@ const rendezVousAujourdhui = computed(() => {
   }).length;
 });
 
-const clientsFiltres = computed(() => {
-  const search = rechercheClient.value.toLowerCase();
 
-  let result = clients.value;
-
-  if (search) {
-    result = result.filter(client =>
-      client.nom?.toLowerCase().includes(search) ||
-      client.email?.toLowerCase().includes(search) ||
-      client.telephone?.toLowerCase().includes(search)
-    );
-  }
-
-  return result.sort((a, b) => {
-    return new Date(a.date_fin) - new Date(b.date_fin);
-  });
-});
 const reparationsFiltrees = computed(() => {
   const search = rechercheReparation.value.toLowerCase();
   if (!search) return reparations.value;
