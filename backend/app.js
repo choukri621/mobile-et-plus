@@ -113,19 +113,31 @@ app.get("/test-email", async (req, res) => {
 
 /* NOTIFICATION ABONNEMENT */
 /* NOTIFICATION ABONNEMENT */
+/* NOTIFICATION ABONNEMENT IPTV */
 
 console.log("Cron IPTV chargé");
 
 cron.schedule(
-  "* * * * *",
+  "0 9 * * *",
   () => {
-    console.log("Vérification abonnements IPTV");
+    console.log("Vérification des abonnements IPTV");
 
     const sql = `
-SELECT *
-FROM clients
-LIMIT 5
-`;
+      SELECT *
+      FROM clients
+      WHERE DATEDIFF(date_fin, CURDATE()) BETWEEN 0 AND 7
+      AND statut = 'actif'
+      AND (
+        (email IS NOT NULL AND TRIM(email) <> '')
+        OR
+        (telephone IS NOT NULL AND TRIM(telephone) <> '')
+      )
+      AND (
+        derniere_notification_date IS NULL
+        OR derniere_notification_date < CURDATE()
+      )
+      ORDER BY date_fin ASC
+    `;
 
     db.query(sql, async (err, results) => {
       if (err) {
@@ -133,41 +145,190 @@ LIMIT 5
         return;
       }
 
-      console.log("Clients trouvés :", results.length);
-console.table(results);
+      console.log("Clients à notifier :", results.length);
+
       for (const client of results) {
-        try {
-          const joursRestants = Math.max(
-            0,
-            Math.ceil(
-              (new Date(client.date_fin) - new Date()) /
+        const joursRestants = Math.max(
+          0,
+          Math.ceil(
+            (new Date(client.date_fin) - new Date()) /
               (1000 * 60 * 60 * 24)
-            )
-          );
+          )
+        );
 
-          await envoyerEmail(
-            client.email,
-            client.nom,
-            client.date_fin,
-            joursRestants
-          );
+        let notificationEnvoyee = false;
 
-          if (client.telephone) {
+        try {
+          if (client.email && client.email.trim() !== "") {
+            await envoyerEmail(
+              client.email,
+              client.nom,
+              client.date_fin,
+              joursRestants
+            );
+
+            notificationEnvoyee = true;
+
+            console.log(
+              `Email envoyé à ${client.nom} : J-${joursRestants}`
+            );
+          }
+
+          if (
+            client.telephone &&
+            client.telephone.trim() !== "" &&
+            process.env.TWILIO_ACCOUNT_SID &&
+            process.env.TWILIO_AUTH_TOKEN &&
+            process.env.TWILIO_PHONE_NUMBER
+          ) {
             await envoyerSMSExpiration(
               client.telephone,
               client.nom,
               client.date_fin,
               joursRestants
             );
+
+            notificationEnvoyee = true;
+
+            console.log(
+              `SMS envoyé à ${client.nom} : J-${joursRestants}`
+            );
           }
 
-          console.log(
-            `Notification envoyée à ${client.nom} (${joursRestants} jour(s) restant(s))`
-          );
+          if (notificationEnvoyee) {
+            db.query(
+              `
+                UPDATE clients
+                SET derniere_notification_date = CURDATE()
+                WHERE id = ?
+              `,
+              [client.id],
+              (updateErr) => {
+                if (updateErr) {
+                  console.error(
+                    "Erreur mise à jour notification :",
+                    updateErr
+                  );
+                }
+              }
+            );
+          }
         } catch (error) {
           console.error(
-            `Erreur notification ${client.nom} :`,
-            error
+            `Erreur notification pour ${client.nom} :`,
+            error.message
+          );
+        }
+      }
+    });
+  },
+  {
+    timezone: "America/Toronto"
+  }
+);/* NOTIFICATION ABONNEMENT IPTV */
+
+console.log("Cron IPTV chargé");
+
+cron.schedule(
+  "0 9 * * *",
+  () => {
+    console.log("Vérification des abonnements IPTV");
+
+    const sql = `
+      SELECT *
+      FROM clients
+      WHERE DATEDIFF(date_fin, CURDATE()) BETWEEN 0 AND 7
+      AND statut = 'actif'
+      AND (
+        (email IS NOT NULL AND TRIM(email) <> '')
+        OR
+        (telephone IS NOT NULL AND TRIM(telephone) <> '')
+      )
+      AND (
+        derniere_notification_date IS NULL
+        OR derniere_notification_date < CURDATE()
+      )
+      ORDER BY date_fin ASC
+    `;
+
+    db.query(sql, async (err, results) => {
+      if (err) {
+        console.error("Erreur recherche clients :", err);
+        return;
+      }
+
+      console.log("Clients à notifier :", results.length);
+
+      for (const client of results) {
+        const joursRestants = Math.max(
+          0,
+          Math.ceil(
+            (new Date(client.date_fin) - new Date()) /
+              (1000 * 60 * 60 * 24)
+          )
+        );
+
+        let notificationEnvoyee = false;
+
+        try {
+          if (client.email && client.email.trim() !== "") {
+            await envoyerEmail(
+              client.email,
+              client.nom,
+              client.date_fin,
+              joursRestants
+            );
+
+            notificationEnvoyee = true;
+
+            console.log(
+              `Email envoyé à ${client.nom} : J-${joursRestants}`
+            );
+          }
+
+          if (
+            client.telephone &&
+            client.telephone.trim() !== "" &&
+            process.env.TWILIO_ACCOUNT_SID &&
+            process.env.TWILIO_AUTH_TOKEN &&
+            process.env.TWILIO_PHONE_NUMBER
+          ) {
+            await envoyerSMSExpiration(
+              client.telephone,
+              client.nom,
+              client.date_fin,
+              joursRestants
+            );
+
+            notificationEnvoyee = true;
+
+            console.log(
+              `SMS envoyé à ${client.nom} : J-${joursRestants}`
+            );
+          }
+
+          if (notificationEnvoyee) {
+            db.query(
+              `
+                UPDATE clients
+                SET derniere_notification_date = CURDATE()
+                WHERE id = ?
+              `,
+              [client.id],
+              (updateErr) => {
+                if (updateErr) {
+                  console.error(
+                    "Erreur mise à jour notification :",
+                    updateErr
+                  );
+                }
+              }
+            );
+          }
+        } catch (error) {
+          console.error(
+            `Erreur notification pour ${client.nom} :`,
+            error.message
           );
         }
       }
@@ -177,7 +338,6 @@ console.table(results);
     timezone: "America/Toronto"
   }
 );
-
 
 cron.schedule("* * * * *", () => {
 const sql = `

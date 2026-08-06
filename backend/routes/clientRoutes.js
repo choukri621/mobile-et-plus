@@ -80,4 +80,58 @@ router.put("/:id", (req, res) => {
     }
   );
 });
+// GET clients classés par expiration la plus proche
+router.get("/expiration-proche/liste", (req, res) => {
+  const jours = Number(req.query.jours) || 30;
+  const recherche = String(req.query.recherche || "").trim();
+
+  const sql = `
+    SELECT
+      id,
+      nom,
+      telephone,
+      email,
+      serveur_iptv,
+      date_debut,
+      date_fin,
+      statut,
+      DATEDIFF(date_fin, CURDATE()) AS jours_restants,
+      CASE
+        WHEN
+          (email IS NULL OR TRIM(email) = '')
+          AND
+          (telephone IS NULL OR TRIM(telephone) = '')
+        THEN 0
+        ELSE 1
+      END AS contact_disponible
+    FROM clients
+    WHERE date_fin IS NOT NULL
+    AND DATEDIFF(date_fin, CURDATE()) BETWEEN 0 AND ?
+    AND (
+      nom LIKE ?
+      OR email LIKE ?
+      OR telephone LIKE ?
+      OR serveur_iptv LIKE ?
+    )
+    ORDER BY date_fin ASC, nom ASC
+  `;
+
+  const terme = `%${recherche}%`;
+
+  db.query(
+    sql,
+    [jours, terme, terme, terme, terme],
+    (err, results) => {
+      if (err) {
+        console.error("Erreur expirations proches :", err);
+
+        return res.status(500).json({
+          message: "Erreur lors du chargement des expirations"
+        });
+      }
+
+      res.json(results);
+    }
+  );
+});
 module.exports = router;

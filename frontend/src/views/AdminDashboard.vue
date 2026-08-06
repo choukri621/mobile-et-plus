@@ -352,9 +352,184 @@
 
   </div>
 </div>
+<section class="expiration-section">
+  <div class="expiration-header">
+    <div>
+      <h2>Abonnements proches de l’expiration</h2>
+      <p>
+        Les clients sont classés automatiquement de la date
+        d’expiration la plus proche à la plus éloignée.
+      </p>
+    </div>
+
+    <button
+      class="refresh-btn"
+      @click="chargerClientsExpiration"
+    >
+      Actualiser
+    </button>
+  </div>
+
+  <div class="expiration-filters">
+    <input
+      v-model="rechercheExpiration"
+      type="text"
+      placeholder="Chercher par nom, email, téléphone ou serveur"
+      @keyup.enter="chargerClientsExpiration"
+    />
+
+    <select
+      v-model="periodeExpiration"
+      @change="chargerClientsExpiration"
+    >
+      <option :value="7">7 prochains jours</option>
+      <option :value="30">30 prochains jours</option>
+      <option :value="60">60 prochains jours</option>
+      <option :value="90">90 prochains jours</option>
+      <option :value="365">Toute l’année</option>
+    </select>
+
+    <button @click="chargerClientsExpiration">
+      Rechercher
+    </button>
+  </div>
+
+  <p v-if="chargementExpiration">
+    Chargement des abonnements...
+  </p>
+
+  <div
+    v-else-if="clientsExpiration.length === 0"
+    class="empty-expiration"
+  >
+    Aucun abonnement trouvé pour cette période.
+  </div>
+
+  <div v-else class="expiration-table-wrapper">
+    <table class="expiration-table">
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Contact</th>
+          <th>Serveur</th>
+          <th>Date de fin</th>
+          <th>Temps restant</th>
+          <th>Notification</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr
+          v-for="client in clientsExpiration"
+          :key="client.id"
+        >
+          <td>
+            <strong>{{ client.nom }}</strong>
+          </td>
+
+          <td>
+            <div>{{ client.email || "Aucun email" }}</div>
+            <div>{{ client.telephone || "Aucun téléphone" }}</div>
+          </td>
+
+          <td>
+            {{ client.serveur_iptv || "Non défini" }}
+          </td>
+
+          <td>
+            {{ client.date_fin?.substring(0, 10) }}
+          </td>
+
+          <td>
+            <span
+              class="expiration-badge"
+              :class="classeExpiration(client.jours_restants)"
+            >
+              <template v-if="client.jours_restants === 0">
+                Expire aujourd’hui
+              </template>
+
+              <template v-else>
+                {{ client.jours_restants }} jour(s)
+              </template>
+            </span>
+          </td>
+
+          <td>
+            <span
+              v-if="client.contact_disponible"
+              class="contact-ok"
+            >
+              Contact disponible
+            </span>
+
+            <span v-else class="contact-missing">
+              Contact manquant
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 </template>
 
+
 <script setup>
+// GET clients classés par expiration la plus proche
+router.get("/expiration-proche/liste", (req, res) => {
+  const jours = Number(req.query.jours) || 30;
+  const recherche = String(req.query.recherche || "").trim();
+
+  const sql = `
+    SELECT
+      id,
+      nom,
+      telephone,
+      email,
+      serveur_iptv,
+      date_debut,
+      date_fin,
+      statut,
+      DATEDIFF(date_fin, CURDATE()) AS jours_restants,
+      CASE
+        WHEN
+          (email IS NULL OR TRIM(email) = '')
+          AND
+          (telephone IS NULL OR TRIM(telephone) = '')
+        THEN 0
+        ELSE 1
+      END AS contact_disponible
+    FROM clients
+    WHERE date_fin IS NOT NULL
+    AND DATEDIFF(date_fin, CURDATE()) BETWEEN 0 AND ?
+    AND (
+      nom LIKE ?
+      OR email LIKE ?
+      OR telephone LIKE ?
+      OR serveur_iptv LIKE ?
+    )
+    ORDER BY date_fin ASC, nom ASC
+  `;
+
+  const terme = `%${recherche}%`;
+
+  db.query(
+    sql,
+    [jours, terme, terme, terme, terme],
+    (err, results) => {
+      if (err) {
+        console.error("Erreur expirations proches :", err);
+
+        return res.status(500).json({
+          message: "Erreur lors du chargement des expirations"
+        });
+      }
+
+      res.json(results);
+    }
+  );
+});
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
@@ -915,5 +1090,132 @@ button:hover,.new-btn:hover,.excel-btn:hover{transform:translateY(-4px);box-shad
 .pagination button:disabled{
   opacity:.4;
   cursor:not-allowed;
+}
+.expiration-section {
+  background: #111827;
+  border: 1px solid rgba(255, 122, 0, 0.25);
+  border-radius: 22px;
+  padding: 28px;
+  margin-top: 30px;
+  color: white;
+}
+
+.expiration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.expiration-header h2 {
+  color: #ff7a00;
+  margin-bottom: 8px;
+}
+
+.expiration-header p {
+  color: #9ca3af;
+}
+
+.expiration-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.expiration-filters input,
+.expiration-filters select {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #374151;
+  background: #030712;
+  color: white;
+}
+
+.expiration-filters button,
+.refresh-btn {
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  background: #ff7a00;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.expiration-table-wrapper {
+  overflow-x: auto;
+}
+
+.expiration-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.expiration-table th,
+.expiration-table td {
+  padding: 15px;
+  border-bottom: 1px solid #374151;
+  text-align: left;
+}
+
+.expiration-table th {
+  color: #ff7a00;
+  background: #0b1220;
+}
+
+.expiration-badge {
+  display: inline-block;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.expiration-badge.urgent {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+.expiration-badge.danger {
+  background: rgba(249, 115, 22, 0.25);
+  color: #fb923c;
+}
+
+.expiration-badge.warning {
+  background: rgba(234, 179, 8, 0.25);
+  color: #facc15;
+}
+
+.expiration-badge.normal {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.contact-ok {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.contact-missing {
+  color: #ef4444;
+  font-weight: bold;
+}
+
+.empty-expiration {
+  padding: 30px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+@media (max-width: 800px) {
+  .expiration-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .expiration-filters {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
