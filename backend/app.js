@@ -218,9 +218,25 @@ cron.schedule("* * * * *", () => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
+  console.log(`Serveur lancé sur le port ${PORT}`);
 
-    console.log(`Serveur lancé sur le port ${PORT}`);
+  db.query(
+    `
+      SELECT
+        DATABASE() AS database_name,
+        COUNT(*) AS total_clients
+      FROM clients
+    `,
+    (err, results) => {
+      if (err) {
+        console.error("Erreur vérification base :", err);
+        return;
+      }
 
+      console.log("DATABASE =", results[0].database_name);
+      console.log("TOTAL CLIENTS =", results[0].total_clients);
+    }
+  );
 });
 app.get("/test-email", async (req, res) => {
   try {
