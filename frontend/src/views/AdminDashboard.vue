@@ -300,58 +300,6 @@
     </div>
   </div>
 </div>
-    </main>
-  </div>
-  <div v-if="clientARenouveler" class="modal-bg">
-  <div class="modal">
-
-    <h2>Renouveler l'abonnement</h2>
-
-    <input
-      type="text"
-      v-model="formRenouvellement.nom"
-      placeholder="Nom"
-      disabled
-    >
-
-    <select
-      v-model="formRenouvellement.serveur_iptv"
-      @change="changerServeurRenouvellement"
-    >
-      <option>Atlas Pro</option>
-      <option>BoxyHD</option>
-      <option>Smart IPTV</option>
-      <option>OTT Platinium</option>
-    </select>
-
-    <input
-      type="date"
-      v-model="formRenouvellement.date_debut"
-    >
-
-    <input
-      type="date"
-      v-model="formRenouvellement.date_fin"
-    >
-
-    <input
-      type="text"
-      :value="formRenouvellement.prix + ' $'"
-      disabled
-    >
-
-    <div class="modal-actions">
-      <button class="edit" @click="confirmerRenouvellement">
-        Confirmer
-      </button>
-
-      <button class="delete" @click="clientARenouveler = false">
-        Annuler
-      </button>
-    </div>
-
-  </div>
-</div>
 <section class="expiration-section">
   <div class="expiration-header">
     <div>
@@ -472,6 +420,59 @@
     </table>
   </div>
 </section>
+    </main>
+  </div>
+  <div v-if="clientARenouveler" class="modal-bg">
+  <div class="modal">
+
+    <h2>Renouveler l'abonnement</h2>
+
+    <input
+      type="text"
+      v-model="formRenouvellement.nom"
+      placeholder="Nom"
+      disabled
+    >
+
+    <select
+      v-model="formRenouvellement.serveur_iptv"
+      @change="changerServeurRenouvellement"
+    >
+      <option>Atlas Pro</option>
+      <option>BoxyHD</option>
+      <option>Smart IPTV</option>
+      <option>OTT Platinium</option>
+    </select>
+
+    <input
+      type="date"
+      v-model="formRenouvellement.date_debut"
+    >
+
+    <input
+      type="date"
+      v-model="formRenouvellement.date_fin"
+    >
+
+    <input
+      type="text"
+      :value="formRenouvellement.prix + ' $'"
+      disabled
+    >
+
+    <div class="modal-actions">
+      <button class="edit" @click="confirmerRenouvellement">
+        Confirmer
+      </button>
+
+      <button class="delete" @click="clientARenouveler = false">
+        Annuler
+      </button>
+    </div>
+
+  </div>
+</div>
+
 </template>
 
 
@@ -1285,5 +1286,18 @@ button:hover,.new-btn:hover,.excel-btn:hover{transform:translateY(-4px);box-shad
   .expiration-filters {
     grid-template-columns: 1fr;
   }
+}.expiration-section {
+  width: 100%;
+  margin-top: 30px;
+  overflow: hidden;
+}
+
+.expiration-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.expiration-table {
+  min-width: 950px;
 }
 </style>
