@@ -137,7 +137,7 @@ cron.schedule(
       }
 
       console.log("Clients trouvés :", results.length);
-
+console.table(results);
       for (const client of results) {
         try {
           const joursRestants = Math.max(
@@ -183,13 +183,19 @@ cron.schedule(
 
 
 cron.schedule("* * * * *", () => {
-  const sql = `
-    SELECT *
-    FROM rendez_vous
-    WHERE statut = 'en attente'
-    AND rappel_envoye = 0
-    AND TIMESTAMP(date_rdv, heure_rdv) BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 HOUR)
-  `;
+const sql = `
+SELECT
+id,
+nom,
+email,
+statut,
+date_fin,
+DATEDIFF(date_fin, CURDATE()) AS jours
+FROM clients
+ORDER BY jours ASC
+LIMIT 10
+`;
+
 
   db.query(sql, (err, results) => {
     if (err) {
